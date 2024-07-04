@@ -1,0 +1,12 @@
+Lib
+Include
+Library
+.env
+Scripts
+etc
+.vscode
+share
+pyvenv.cfg
+
+
+
