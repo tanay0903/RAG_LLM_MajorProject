@@ -5,8 +5,8 @@ from langchain.text_splitter import CharacterTextSplitter
 from langchain.embeddings import HuggingFaceInstructEmbeddings
 #from langchain.embeddings import openai
 from langchain.vectorstores import FAISS
-import fitz  # PyMuPDF
-
+from langchain.memory import ConversationBufferMemory
+from langchain.chains import conversational_retrieval
 
 
 def get_pdf_text(pdf_docs):
@@ -27,11 +27,20 @@ def get_text_chunks(text):
     chunks = text_splitter.split_text(text)
     return chunks
 
-def get_vector_store(text_chunks):
+def get_vectorstore(text_chunks):
     #embeddings = OpenAIEmbeddings()
     embeddings = HuggingFaceInstructEmbeddings(model_name="hkunlp/instructor-xl")
-    vectorstore = FAISS.from_text(text=text_chunks, embedding=embeddings)
+    vectorstore = FAISS.from_texts(texts=text_chunks,embedding=embeddings)
     return vectorstore 
+
+# def get_conversation_chain(vectorstore):
+#     llm = 
+#     memory = ConversationBufferMemory(memory_key='Chat_History', return_messages=True)
+#     conversation_chain = conversational_retrieval.from_llm(
+#         llm=llm
+
+#     )
+
 
 
 
@@ -58,8 +67,11 @@ def main():
                 st.write(text_chunks)
 
                 # create vector store
-                vectorstore = get_vector_store(text_chunks)
-                return text_chunks
+                vectorstore = get_vectorstore(text_chunks)
+
+                # create conversation chain 
+                # conversation = get_conversation_chain(vectorstore)
+                
     
 
 if __name__ == '__main__':
