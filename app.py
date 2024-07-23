@@ -9,6 +9,7 @@ from langchain.memory import ConversationBufferMemory
 from langchain.chains import conversational_retrieval
 
 
+
 def get_pdf_text(pdf_docs):
     text = " "
     for pdf in pdf_docs:
@@ -34,12 +35,11 @@ def get_vectorstore(text_chunks):
     return vectorstore 
 
 # def get_conversation_chain(vectorstore):
-#     llm = 
+#     llm = ""
 #     memory = ConversationBufferMemory(memory_key='Chat_History', return_messages=True)
 #     conversation_chain = conversational_retrieval.from_llm(
 #         llm=llm
-
-#     )
+#         )
 
 
 

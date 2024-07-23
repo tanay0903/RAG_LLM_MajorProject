@@ -1,15 +1,3 @@
-# from transformers import AutoModelForCausalLM, AutoTokenizer
-# from huggingface_hub import login
-
-# login(token = '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')
-
-# model = AutoModelForCausalLM.from_pretrained("mistralai/Mistral-7B-v0.1", device_map="auto")
-# tokenizer = AutoTokenizer.from_pretrained("mistralai/Mistral-7B-v0.1")
-
-# prompt = "My favourite condiment is"
-
-# model_inputs = tokenizer([prompt], return_tensors="pt").to("cuda")
-# model.to(device)
-
-# generated_ids = model.generate(**model_inputs, max_new_tokens=100, do_sample=True)
-# tokenizer.batch_decode(generated_ids)[0]
+# MODEL_ID = "TheBloke/Mistral-7B-Instruct-v0.2-GPTQ"
+MODEL_ID = "TheBloke/Mistral-7B-Instruct-v0.2-GGUF"
+MODEL_BASENAME = "mistral-7b-instruct-v0.2.Q8_0.gguf"
