@@ -34,12 +34,12 @@ def get_vectorstore(text_chunks):
     vectorstore = FAISS.from_texts(texts=text_chunks,embedding=embeddings)
     return vectorstore 
 
-# def get_conversation_chain(vectorstore):
-#     llm = ""
-#     memory = ConversationBufferMemory(memory_key='Chat_History', return_messages=True)
-#     conversation_chain = conversational_retrieval.from_llm(
-#         llm=llm
-#         )
+def get_conversation_chain(vectorstore):
+    llm = ""
+    memory = ConversationBufferMemory(memory_key='Chat_History', return_messages=True)
+    conversation_chain = conversational_retrieval.from_llm(
+        llm=llm
+        )
 
 
 
@@ -70,7 +70,7 @@ def main():
                 vectorstore = get_vectorstore(text_chunks)
 
                 # create conversation chain 
-                # conversation = get_conversation_chain(vectorstore)
+                conversation = get_conversation_chain(vectorstore)
                 
     
 
