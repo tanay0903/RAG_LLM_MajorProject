@@ -40,7 +40,7 @@ embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
 vector_store = SupabaseVectorStore(
     embedding=embeddings,
     client=supabase,
-    table_name="documents",
+    table_name="files",
     query_name="match_documents",
 )
 # initiating llm
@@ -76,8 +76,8 @@ agent = create_tool_calling_agent(llm, tools, prompt)
 agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
 # initiating streamlit app
-st.set_page_config(page_title="Agentic RAG Chatbot", page_icon="🦜")
-st.title("🦜 Agentic RAG Chatbot")
+st.set_page_config(page_title="Docs_Genie", page_icon="🧞")
+st.title("🧞 Docs_Genie")
 
 # initialize chat history
 if "messages" not in st.session_state:
