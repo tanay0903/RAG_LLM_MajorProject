@@ -1,6 +1,7 @@
 # import basics
 import os
 from dotenv import load_dotenv
+import time
 
 # import google generative ai
 import google.generativeai as genai
@@ -20,6 +21,8 @@ from langchain import hub
 from langchain_core.prompts import PromptTemplate
 from langchain_community.vectorstores import SupabaseVectorStore
 from langchain_core.tools import tool
+from langchain_community.document_loaders import PyMuPDFLoader, TextLoader, PyPDFLoader, Docx2txtLoader
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 # import supabase db
 from supabase.client import Client, create_client
@@ -32,6 +35,20 @@ genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 supabase_url = os.environ.get("SUPABASE_URL")
 supabase_key = os.environ.get("SUPABASE_SERVICE_KEY")
 supabase: Client = create_client(supabase_url, supabase_key)
+
+# Streamlit page configuration
+st.set_page_config(page_title="Document Genie", layout="wide")
+
+# Sidebar Instructions
+st.sidebar.markdown("""
+## Document Genie: Instant Insights from Your Documents
+
+This chatbot uses Google's Generative AI (Gemini-PRO) to process and analyze uploaded PDFs for quick insights.
+
+### How to Use:
+1. Upload your PDF,DOCX, or TXT files documents.
+2. Submit and ask questions for precise answers based on the content.
+""")
 
 # initiating embeddings model
 embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
@@ -76,8 +93,98 @@ agent = create_tool_calling_agent(llm, tools, prompt)
 agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
 # initiating streamlit app
-st.set_page_config(page_title="Docs_Genie", page_icon="🧞")
 st.title("🧞 Docs_Genie")
+
+import os
+import time
+import streamlit as st
+from langchain_community.document_loaders import PyMuPDFLoader, TextLoader, Docx2txtLoader
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+# Sidebar for Upload
+st.sidebar.title("📄 Upload Files")
+uploaded_files = st.sidebar.file_uploader(
+    "Choose PDF, DOCX, or TXT files", 
+    type=["pdf", "docx", "txt"], 
+    accept_multiple_files=True,
+    key="file_uploader",   # Important to assign a key
+)
+
+# Initialize temp variables
+if "uploaded_file_paths" not in st.session_state:
+    st.session_state.uploaded_file_paths = []
+if "files_processed" not in st.session_state:
+    st.session_state.files_processed = False
+
+upload_dir = os.path.join("uploads", "temp")
+os.makedirs(upload_dir, exist_ok=True)
+
+# Handle uploaded files ONLY ONCE
+if uploaded_files and not st.session_state.files_processed:
+    all_docs = []
+
+    for uploaded_file in uploaded_files:
+        temp_file_path = os.path.join(upload_dir, uploaded_file.name)
+        with open(temp_file_path, "wb") as f:
+            f.write(uploaded_file.getbuffer())
+        
+        st.session_state.uploaded_file_paths.append(temp_file_path)
+
+        # Decide loader based on file type
+        if uploaded_file.name.endswith(".pdf"):
+            loader = PyMuPDFLoader(temp_file_path)
+        elif uploaded_file.name.endswith(".docx"):
+            loader = Docx2txtLoader(temp_file_path)
+        elif uploaded_file.name.endswith(".txt"):
+            loader = TextLoader(temp_file_path, encoding="utf-8")
+        else:
+            st.warning(f"Unsupported file format: {uploaded_file.name}")
+            continue
+
+        documents = loader.load()
+
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
+        docs = text_splitter.split_documents(documents)
+
+        all_docs.extend(docs)
+
+    # Add to vector store
+    if all_docs:
+        vector_store.add_documents(all_docs)
+        
+        success_placeholder = st.empty()
+        success_placeholder.success(f"✅ Uploaded and processed {len(uploaded_files)} file(s) successfully!")
+        time.sleep(3)
+        success_placeholder.empty()
+
+    st.session_state.files_processed = True
+
+# Deleting Files when no uploaded files
+if not uploaded_files and st.session_state.files_processed:
+    # Files were uploaded before but now removed
+    for temp_file_path in st.session_state.uploaded_file_paths:
+        try:
+            os.remove(temp_file_path)
+            info_placeholder = st.empty()
+            info_placeholder.info(f"🧹 Cleaned up temporary file: {os.path.basename(temp_file_path)}")
+            time.sleep(2)
+            info_placeholder.empty()
+        except Exception as e:
+            st.warning(f"⚠️ Could not delete temporary file: {e}")
+
+    # Reset the session state after all files are removed
+    st.session_state.uploaded_file_paths = []
+    st.session_state.files_processed = False
+
+# Keep track of which files are removed
+if uploaded_files and len(uploaded_files) < len(st.session_state.uploaded_file_paths):
+    # If files are removed but new ones are still uploaded
+    removed_files = set(st.session_state.uploaded_file_paths) - set([os.path.join(upload_dir, f.name) for f in uploaded_files])
+    for file in removed_files:
+        info_placeholder = st.empty()
+        info_placeholder.info(f"🧹 Cleaned up temporary file: {os.path.basename(file)}")
+        time.sleep(2)
+        info_placeholder.empty()
 
 # initialize chat history
 if "messages" not in st.session_state:
@@ -95,7 +202,6 @@ for message in st.session_state.messages:
 
 # create the bar where we can type messages
 user_question = st.chat_input("How are you?")
-
 
 # did the user submit a prompt?
 if user_question:
@@ -117,4 +223,3 @@ if user_question:
         st.markdown(ai_message)
 
         st.session_state.messages.append(AIMessage(ai_message))
-
