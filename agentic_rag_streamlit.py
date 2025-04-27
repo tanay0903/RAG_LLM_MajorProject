@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 
 # import google generative ai
 import google.generativeai as genai
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
 # import streamlit
 import streamlit as st
@@ -18,7 +19,6 @@ from langchain.agents import create_tool_calling_agent
 from langchain import hub
 from langchain_core.prompts import PromptTemplate
 from langchain_community.vectorstores import SupabaseVectorStore
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_core.tools import tool
 
 # import supabase db

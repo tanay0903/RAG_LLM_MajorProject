@@ -7,7 +7,8 @@ from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import SupabaseVectorStore
-from langchain.embeddings import HuggingFaceEmbeddings
+# from langchain.embeddings import HuggingFaceEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
 # import supabase
 from supabase.client import Client, create_client
@@ -21,10 +22,10 @@ supabase_key = os.environ.get("SUPABASE_SERVICE_KEY")
 supabase: Client = create_client(supabase_url, supabase_key)
 
 # initiate embeddings model
-embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
 
 # load pdf docs from folder 'documents'
-loader = PyPDFDirectoryLoader("documents")
+loader = PyPDFDirectoryLoader(".\files", glob="**/*.pdf")
 
 # split the documents in multiple chunks
 documents = loader.load()
