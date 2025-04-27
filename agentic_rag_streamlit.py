@@ -2,12 +2,15 @@
 import os
 from dotenv import load_dotenv
 
+# import google generative ai
+import google.generativeai as genai
+
 # import streamlit
 import streamlit as st
 
 # import langchain
 from langchain.agents import AgentExecutor
-from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.chat_models import init_chat_model
 from langchain_core.messages import SystemMessage, AIMessage, HumanMessage
@@ -15,7 +18,7 @@ from langchain.agents import create_tool_calling_agent
 from langchain import hub
 from langchain_core.prompts import PromptTemplate
 from langchain_community.vectorstores import SupabaseVectorStore
-from langchain_openai import OpenAIEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_core.tools import tool
 
 # import supabase db
@@ -23,6 +26,7 @@ from supabase.client import Client, create_client
 
 # load environment variables
 load_dotenv()  
+genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 
 # initiating supabase
 supabase_url = os.environ.get("SUPABASE_URL")
@@ -30,7 +34,7 @@ supabase_key = os.environ.get("SUPABASE_SERVICE_KEY")
 supabase: Client = create_client(supabase_url, supabase_key)
 
 # initiating embeddings model
-embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
 
 # initiating vector store
 vector_store = SupabaseVectorStore(
@@ -39,9 +43,13 @@ vector_store = SupabaseVectorStore(
     table_name="documents",
     query_name="match_documents",
 )
- 
 # initiating llm
-llm = ChatOpenAI(model="gpt-4o",temperature=0)
+llm = ChatGoogleGenerativeAI(
+    model="models/gemini-1.5-pro-latest",
+    temperature=0,
+    convert_system_message_to_human=True,  # Important for chat prompts
+    #stream=False
+)
 
 # pulling prompt from hub
 prompt = hub.pull("hwchase17/openai-functions-agent")
